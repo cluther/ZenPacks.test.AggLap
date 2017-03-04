@@ -1,1 +1,114 @@
 name: ZenPacks.test.AggLap
+
+
+classes:
+  AggLapDevice:
+    base: [zenpacklib.Device]
+    label: Agglapping Device
+
+  AggLapObject:
+    base: [zenpacklib.Component]
+    label: Object
+
+  AggLapPool:
+    base: [zenpacklib.Component]
+    label: Pool
+
+  AggLapMetaPool:
+    base: [zenpacklib.Component]
+    label: Meta Pool
+
+
+class_relationships:
+  - AggLapDevice 1:MC AggLapObject
+  - AggLapDevice 1:MC AggLapPool
+  - AggLapDevice 1:MC AggLapMetaPool
+  - AggLapPool 1:M AggLapObject
+  - AggLapMetaPool 1:M AggLapPool
+
+
+device_classes:
+  /Test/AggLap:
+    remove: true
+
+    zProperties:
+      zPythonClass: ZenPacks.test.AggLap.AggLapDevice
+      zCollectorPlugins:
+        - test.AggLap
+
+    templates:
+      Object:
+        targetPythonClass: ZenPacks.test.AggLap.AggLapObject
+        datasources:
+          ApplicationStatus:
+            type: COMMAND
+            commandTemplate: /bin/echo "OK|ApplicationStatus=11"
+            eventClass: /Test/AggLap
+            severity: Info
+            cycletime: 10
+            datapoints:
+              ApplicationStatus: GAUGE
+
+        graphs:
+          Application Status:
+            units: numbers
+            miny: 0
+            maxy: 100
+            graphpoints:
+              Status:
+                dpName: ApplicationStatus_ApplicationStatus
+
+      Pool:
+        targetPythonClass: ZenPacks.test.AggLap.AggLapPool
+        datasources:
+          ApplicationStatus:
+            type: Datapoint Aggregator
+            targetMethod: aggLapObjects
+            targetDataSource: ApplicationStatus
+            targetDataPoint: ApplicationStatus
+            eventClass: /Test/AggLap
+            severity: Info
+            cycletime: "10"
+            datapoints:
+              ApplicationStatus:
+                rrdtype: GAUGE
+                operation: sum
+
+        graphs:
+          Application Status:
+            units: numbers
+            miny: 0
+            maxy: 100
+            graphpoints:
+              Status:
+                dpName: ApplicationStatus_ApplicationStatus
+
+      MetaPool:
+        targetPythonClass: ZenPacks.test.AggLap.AggLapMetaPool
+        datasources:
+          ApplicationStatus:
+            type: Datapoint Aggregator
+            targetMethod: aggLapPools
+            targetDataSource: ApplicationStatus
+            targetDataPoint: ApplicationStatus
+            eventClass: /Test/AggLap
+            severity: Info
+            cycletime: "10"
+            datapoints:
+              ApplicationStatus:
+                rrdtype: GAUGE
+                operation: sum
+
+        graphs:
+          Application Status:
+            units: numbers
+            miny: 0
+            maxy: 100
+            graphpoints:
+              Status:
+                dpName: ApplicationStatus_ApplicationStatus
+
+
+event_classes:
+  /Test/AggLap:
+    remove: true
